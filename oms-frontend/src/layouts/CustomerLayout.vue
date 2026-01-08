@@ -1,6 +1,6 @@
-<!-- src/layouts/DefaultLayout.vue -->
+<!-- src/layouts/CustomerLayout.vue -->
 <script setup>
-import AdminSidebar from '@/components/Admin/SideBar.vue';
+import CustomerSidebar from '@/components/Customer/SideBar.vue';
 import Header from '@/components/common/Header.vue'
 </script>
 
@@ -9,7 +9,7 @@ import Header from '@/components/common/Header.vue'
     <div class="flex min-h-screen">
 
       <!-- Sidebar -->
-      <AdminSidebar />
+      <CustomerSidebar />
   <!-- Right Side -->
       <div class="flex-1 flex flex-col">
 

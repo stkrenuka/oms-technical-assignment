@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -15,8 +15,6 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        echo "hello";
-        die;
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -31,6 +29,7 @@ class AuthController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
+                'role' => 'customer', // default
             ]);
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -51,33 +50,19 @@ class AuthController extends Controller
     /**
      * Login user
      */
-    public function login(Request $request)
+   public function login(Request $request)
     {
-        $validated = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+        $user = User::where('email', $request->email)->first();
 
-        $user = User::where('email', $validated['email'])->first();
-
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Invalid credentials.'],
-            ]);
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        // Revoke previous tokens (optional but recommended)
-        $user->tokens()->delete();
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
-            'message' => 'Login successful',
-            'user' => $user,
-            'token' => $token,
+            'token' => $user->createToken('auth_token')->plainTextToken,
+            'user' => $user
         ]);
     }
-
     /**
      * Logout user (revoke token)
      */

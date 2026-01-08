@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use Illuminate\Http\Middleware\HandleCors;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,8 +14,35 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+
+        /**
+         * ✅ REQUIRED for Sanctum SPA
+         */
+        $middleware->prepend(EnsureFrontendRequestsAreStateful::class);
+
+        /**
+         * ✅ Enable session + CSRF
+         */
+        $middleware->web();
+
+        /**
+         * ✅ Enable API + cookies
+         */
+        $middleware->statefulApi();
+
+        /**
+         * ✅ CORS
+         */
+        $middleware->append(HandleCors::class);
+
+        /**
+         * ✅ Custom aliases
+         */
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })
+    ->create();

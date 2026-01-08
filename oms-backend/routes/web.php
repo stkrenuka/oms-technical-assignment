@@ -1,11 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/test', function () {
-   echo "Test route is working!";
-});
+Route::post('login', [AuthenticatedSessionController::class, 'login']);
+Route::post('login', [AuthenticatedSessionController::class, 'login']);
+Route::post('logout', [AuthenticatedSessionController::class, 'logout']);
+Route::post('register', [AuthenticatedSessionController::class, 'register']);
