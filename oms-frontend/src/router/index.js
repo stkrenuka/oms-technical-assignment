@@ -84,30 +84,20 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore()
 
-  if (!auth.authenticated) {
+  if (!auth.authenticated && localStorage.getItem('token')) {
     await auth.getUser()
   }
 
-  // Guest-only pages
-  if (to.meta.guest && auth.authenticated) {
-    return next(
-      auth.user.role === 'admin'
-        ? { name: 'admin.dashboard' }
-        : { name: 'customer.dashboard' }
-    )
-  }
-
-  // Auth required
   if (to.meta.requiresAuth && !auth.authenticated) {
     return next({ name: 'login' })
   }
 
-  // Role-based access
-  if (to.meta.roles && !to.meta.roles.includes(auth.user.role)) {
-    return next({ name: 'login' }) // or Forbidden page
+  if (to.meta.roles && !to.meta.roles.includes(auth.user?.role)) {
+    return next({ name: 'login' })
   }
 
   next()
 })
+
 
 export default router

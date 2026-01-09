@@ -1,11 +1,19 @@
-import axios from 'axios';
+
+import axios from 'axios'
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    withCredentials: true, // REQUIRED
-    withXSRFToken: true,   // Recommended for newer axios versions
-    xsrfCookieName: 'XSRF-TOKEN', // Default
-    xsrfHeaderName: 'X-XSRF-TOKEN'  // Default
-});
+})
 
-export default api;
+// 🔐 Attach token automatically
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token')
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
+  return config
+})
+
+export default api

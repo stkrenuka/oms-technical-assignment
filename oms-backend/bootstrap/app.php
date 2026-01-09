@@ -15,24 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
-        /**
-         * ✅ REQUIRED for Sanctum SPA
-         */
-        $middleware->prepend(EnsureFrontendRequestsAreStateful::class);
-
-        /**
-         * ✅ Enable session + CSRF
-         */
-        $middleware->web();
-
-        /**
-         * ✅ Enable API + cookies
-         */
-        $middleware->statefulApi();
-
-        /**
-         * ✅ CORS
-         */
         $middleware->append(HandleCors::class);
 
         /**

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth.js'
 import api from '@/api/axios'
+import { useNotificationStore } from '@/stores/notification'
 
 export default function useAuth() {
   const authStore = useAuthStore()
@@ -28,69 +29,76 @@ export default function useAuth() {
   })
 
   // ✅ REGISTER FUNCTION
-  const submitSignup = async () => {
-    if (processing.value) return
+const submitSignup = async () => {
+    const notification = useNotificationStore();
 
-    processing.value = true
-    errors.value = {}
+  if (processing.value) return
 
-    try {
-      await api.get('/sanctum/csrf-cookie')
-      await api.post('/register', registerForm)
+  processing.value = true
+  errors.value = {}
 
-      // fetch logged-in user
-      await authStore.getUser()
+  try {
+    const { data } = await api.post('/register', registerForm)
 
-      // redirect after success
-      router.push({ name: 'login' }) // or dashboard
+    // 🔐 Save token
+    localStorage.setItem('token', data.token)
 
-    } catch (error) {
-      if (error.response?.data?.errors) {
-        errors.value = error.response.data.errors
-      }
-    } finally {
-      processing.value = false
+    // Set auth state
+    authStore.setUser(data.user)
+
+    // Redirect after register
+    router.push({ name: 'customer.dashboard' })
+      notification.notify(
+      'Registration successful',
+      'success'
+    )
+
+  } catch (error) {
+    if (error.response?.status === 422) {
+      errors.value = error.response.data.errors
     }
+  } finally {
+    processing.value = false
   }
+}
+
 
   // ✅ LOGIN FUNCTION (kept simple)
-  const submitLogin = async () => {
-    if (processing.value) return
+const submitLogin = async () => {
+  const notification = useNotificationStore();
+  processing.value = true
+  errors.value = {}
 
-    processing.value = true
-    errors.value = {}
+  try {
+    const { data } = await api.post('/login', loginForm)
 
-    try {
-      await api.get('/sanctum/csrf-cookie')
-      await api.post('/login', loginForm)
+    // 🔐 Save token
+    localStorage.setItem('token', data.token)
 
-      await authStore.getUser()
-      if (authStore.user.role === 'admin') {
-        router.push({ name: 'admin.dashboard' })
-      } else {
-        router.push({ name: 'customer.orders' })
-      }
+    authStore.setUser(data.user)
 
-    } catch (error) {
-      if (error.response?.status === 401) {
-        errors.value = {
-          general: [error.response.data.message]
-        }
-        console.log('error,error', errors.value)
-
-      }
-
-      if (error.response?.status === 422) {
-        errors.value = error.response.data.errors
-      }
-    } finally {
-      processing.value = false
+    router.push(
+      data.user.role === 'admin'
+        ? { name: 'admin.dashboard' }
+        : { name: 'customer.dashboard' }
+    )
+      notification.notify(
+      'Login successful',
+      'success'
+    )
+  } catch (error) {
+    errors.value = {
+      general: ['Invalid credentials']
     }
+  } finally {
+    processing.value = false
   }
+}
+
 
 
   const logout = async () => {
-    await axios.post('/logout')
+    await api.post('/logout')
     authStore.logout()
     router.push({ name: 'login' })
   }

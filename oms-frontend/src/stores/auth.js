@@ -2,38 +2,35 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/api/axios'
-import { Routes } from '@/api/api.js'
 
 export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null)
   const authenticated = ref(false)
-  const user = ref({})
+
+  const setUser = (userData) => {
+    user.value = userData
+    authenticated.value = true
+  }
 
   const getUser = async () => {
     try {
-      const { data } = await api.get(Routes.getUser)
-
-      if (data.success) {
-        user.value = data.data
-        authenticated.value = true
-        return true
-      }
-
-      user.value = {}
-      authenticated.value = false
-      return false
-    } catch (error) {
-      user.value = {}
-      authenticated.value = false
-      return false
+      const { data } = await api.get('/user')
+      user.value = data
+      authenticated.value = true
+    } catch {
+      logout()
     }
   }
 
-  const logout = () => {
-    user.value = {}
+  const logout = async () => {
+    try {
+      await api.post('/logout')
+    } catch {}
+
+    localStorage.removeItem('token')
+    user.value = null
     authenticated.value = false
   }
 
-  return { authenticated, user, getUser, logout }
-}, {
-  persist: true
+  return { user, authenticated, setUser, getUser, logout }
 })

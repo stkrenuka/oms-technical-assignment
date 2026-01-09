@@ -1,6 +1,6 @@
     <script setup>
     import DefaultLayout from '@/layouts/DefaultLayout.vue';
-  import OrdersTable from '@/components/common/OrdersTable.vue';
+  import OrdersTable from '@/components/common/orders/OrdersTable.vue';
 
 
 </script>

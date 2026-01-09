@@ -28,11 +28,11 @@
             Products
           </router-link>
 
-          <button
-            class="block w-full text-left px-4 py-2 rounded hover:bg-red-600"
-          >
-            Logout
-          </button>
+           <LogOut />
         </nav>
       </aside>
     </template>
+        <script setup>
+import LogOut from '@/components/common/LogOut.vue'
+
+</script>

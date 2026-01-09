@@ -1,104 +1,78 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
-
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use Illuminate\Validation\ValidationException;
+use App\Services\Auth\RegisterUserService;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * SPA Login (Sanctum session-based)
      */
-    public function login(LoginRequest $request): JsonResponse
+    public function login(Request $request)
     {
-        // 🔐 Attempt login
-        if (! Auth::attempt(
-            $request->only('email', 'password'),
-            $request->boolean('remember')
-        )) {
-            throw ValidationException::withMessages([
-                'email' => ['Invalid email or password.'],
-            ]);
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'message' => 'Invalid credentials'
+            ], 401);
         }
 
-        // 🔁 Regenerate session (important)
-        $request->session()->regenerate();
+        $user = Auth::user();
 
-        $user = $request->user();
+        // 🔑 Create token
+        $token = $user->createToken('spa-token')->plainTextToken;
 
-        // ✅ Return role to frontend
         return response()->json([
             'success' => true,
+            'token' => $token,
             'user' => [
-                'id'    => $user->id,
-                'name'  => $user->name,
+                'id' => $user->id,
+                'name' => $user->name,
                 'email' => $user->email,
-                'role'  => $user->role, // admin | customer
+                'role' => $user->role,
             ],
         ]);
     }
-   public function register(Request $request): JsonResponse
+
+public function register(Request $request, RegisterUserService $service)
 {
     $validated = $request->validate([
         'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users',
-        'password' => 'required|string|min:4|confirmed',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|min:4|confirmed',
     ]);
 
-    $user = User::create([
-        'name' => $validated['name'],
-        'email' => $validated['email'],
-        'password' => Hash::make($validated['password']),
-        'role' => 'customer',
-    ]);
+    $user = $service->handle($validated);
 
-    // ✅ AUTO LOGIN (IMPORTANT)
-    Auth::login($user);
-    $request->session()->regenerate();
+    $token = $user->createToken('spa-token')->plainTextToken;
 
     return response()->json([
         'success' => true,
-        'user' => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role,
-        ],
+        'token' => $token,
+        'user' => $user,
     ], 201);
 }
+
+
 
 
     /**
      * SPA Logout
      */
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request)
     {
-        $user = $request->user();
+        $request->user()->currentAccessToken()->delete();
 
-        if ($user) {
-            activity()
-                ->performedOn($user)
-                ->causedBy($user)
-                ->event('logout')
-                ->withProperties([
-                    'role' => $user->role,
-                    'ip'   => $request->ip(),
-                ])
-                ->log($user->name . ' logged out');
-        }
-
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true
+        ]);
     }
+
 }
