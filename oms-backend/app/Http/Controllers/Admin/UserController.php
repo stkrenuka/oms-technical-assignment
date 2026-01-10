@@ -3,41 +3,51 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
+use App\Services\User\UserService; // ✅ CORRECT SERVICE
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function __construct(
+        protected UserService $userService
+    ) {}
+
     public function customers(Request $request)
     {
-        $authUser = $request->user();
+        $this->userService->ensureAdmin($request->user());
 
-        // 🔐 Only admin allowed
-        if ($authUser->role !== 'admin') {
-            return response()->json([
-                'message' => 'Unauthorized'
-            ], 403);
-        }
-
-        // ✅ Fetch only customers
-        // ❌ Exclude logged-in admin
-        $customers = User::where('role', 'customer')
-            ->where('id', '!=', $authUser->id)
-            ->select('id', 'name', 'email', 'role')
-            ->paginate(10);
-
-        return response()->json($customers);
+        return response()->json(
+            $this->userService->getCustomers($request->user()->id)
+        );
     }
+
+    public function search(Request $request)
+    {
+        $this->userService->ensureAdmin($request->user());
+
+        $request->validate([
+            'search' => 'required|string|min:2',
+            'per_page' => 'nullable|integer|max:20',
+        ]);
+
+        return response()->json([
+            'data' => $this->userService->searchCustomers(
+                $request->search,
+                $request->per_page ?? 10
+            ),
+        ]);
+    }
+
     public function destroy(User $user)
-{
-    $this->authorize('delete', $user);
+    {
+        $this->authorize('delete', $user);
 
-    $user->delete();
+        $this->userService->delete($user);
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Customer deleted successfully',
-    ]);
-}
-
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer deleted successfully',
+        ]);
+    }
 }

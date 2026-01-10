@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useProductStore } from '@/stores/product'
 
 const emit = defineEmits(['select'])
-const store = useProductStore()
+const productStore = useProductStore()
 
 const query = ref('')
 const results = ref([])
@@ -16,7 +16,7 @@ const search = async () => {
   }
 
   loading.value = true
-  results.value = await store.searchForOrder(query.value)
+  results.value = await productStore.searchForOrder(query.value)
   loading.value = false
 }
 
@@ -38,7 +38,7 @@ const selectProduct = (product) => {
 
     <ul
       v-if="results.length"
-      class="absolute z-10 bg-white border w-full mt-1 rounded max-h-48 overflow-auto"
+      class="absolute z-10 bg-white border w-full mt-1 max-h-48 overflow-auto rounded"
     >
       <li
         v-for="product in results"

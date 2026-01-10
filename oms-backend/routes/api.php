@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\ProductController as CustomerProductController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\DashboardController;
+
 
 
 
@@ -33,8 +36,22 @@ Route::middleware(['auth:sanctum', 'role:admin'])
         Route::resource('products', AdminProductController::class);
         Route::patch('products/{product}/status', [AdminProductController::class, 'changeStatus']);
         Route::get('/customers', [UserController::class, 'customers']);
+               Route::get('/customers/search', [UserController::class, 'search']);
+
         Route::delete('/customers/{user}', [UserController::class, 'destroy']);
     });
 
 // Customer – Products (public)
-Route::get('/products', [CustomerProductController::class, 'index']);
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/products', [CustomerProductController::class, 'index']);
+
+    Route::get('orders', [OrderController::class, 'index']);
+
+    Route::get('orders/statuses', [OrderController::class, 'statuses']);
+
+    Route::get('orders/{order}', [OrderController::class, 'show']);
+
+    Route::post('orders', [OrderController::class, 'store']);
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+});

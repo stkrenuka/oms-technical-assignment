@@ -1,85 +1,69 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import CustomerSearch from '@/components/common/orders/CustomerSearch.vue'
+import OrderItemsTable from './OrderItemsTable.vue'
+import { useOrderStore } from '@/stores/order'
+import useOrderForm from '@/composables/useOrderForm'
+const orderForm = useOrderForm()
+const orderStore = useOrderStore()
+
+defineProps({
+  form: Object,
+  editing: Boolean,
+  total: Number,
+  userRole: String,
+  authUser: Object,
+})
+
+defineEmits(['close', 'save', 'add-item', 'remove-item', 'product-selected', 'customer-selected', 'customer-cleared'])
+onMounted(async () => {
+  const statuses = await orderForm.getOrderStatuses();
+  orderStore.setOrderStatuses(statuses)
+
+})
+</script>
+
 <template>
-  <div class="modal">
-    <div class="modal-box">
+
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded w-[700px]">
       <h3 class="text-lg font-semibold mb-4">
-        {{ order ? 'Edit' : 'Create' }} Order
+        {{ editing ? 'Edit Order' : 'Create Order' }}
       </h3>
+      <CustomerSearch v-if="userRole === 'admin'" @select="$emit('customer-selected', $event)"
+        @clear="$emit('customer-cleared')" />
 
-      <CustomerSearch
-        v-if="userRole === 'admin'"
-        @select="setCustomer"
-      />
 
-      <select v-model="form.status" class="input mb-4">
-        <option>Draft</option>
-        <option>Confirmed</option>
-        <option>Processing</option>
-        <option>Dispatched</option>
-        <option>Delivered</option>
-        <option>Cancelled</option>
-      </select>
-
-      <h4 class="font-medium mb-2">Items</h4>
-
-      <div v-for="(item, i) in form.items" :key="i" class="flex gap-2 mb-2">
-        <ProductSearch @select="p => setProduct(item, p)" />
-        <input type="number" v-model.number="item.qty" min="1" class="input w-20" />
-        <input readonly :value="item.price" class="input w-24 bg-gray-100" />
-        <span class="font-medium">₹{{ item.qty * item.price }}</span>
-        <button @click="remove(i)">✕</button>
+      <div v-else class="mb-4">
+        <label class="block text-sm font-medium mb-1">Customer</label>
+        <input class="border px-3 py-2 rounded w-full bg-gray-100" :value="authUser.name" readonly />
       </div>
 
-      <button class="text-blue-600" @click="addItem">+ Add Item</button>
+      <select  v-if="userRole === 'admin'" v-model="form.status" class="border px-3 py-2 rounded w-full mb-4 mt-4">
+        <option v-for="status in orderStore.ordersStatus" :key="status.id" :value="status.id">
+          {{ status.name }}
+        </option>
+      </select>
+
+      <OrderItemsTable :items="form.items" @add="$emit('add-item')" @remove="$emit('remove-item', $event)"
+        @product-selected="$emit('product-selected', $event)" />
+      <p v-if="orderStore.errors.customer_id" class="text-red-500 text-sm mt-1">
+        {{ orderStore.errors.items[0] }}
+      </p>
 
       <div class="text-right font-semibold mt-4">
         Total: ₹{{ total }}
       </div>
 
-      <div class="flex justify-end gap-2 mt-4">
-        <button @click="$emit('close')">Cancel</button>
-        <button class="btn-green" @click="save">Save</button>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button class="px-4 py-2 border rounded" @click="$emit('close')">
+          Cancel
+        </button>
+        <button class="px-4 py-2 bg-green-600 text-white rounded" @click="$emit('save')">
+          Save
+        </button>
       </div>
+
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, computed } from 'vue'
-import ProductSearch from './ProductSearch.vue'
-import CustomerSearch from './CustomerSearch.vue'
-
-const props = defineProps({
-  order: Object,
-  userRole: String,
-})
-
-const emit = defineEmits(['close', 'save'])
-
-const form = ref(
-  props.order
-    ? structuredClone(props.order)
-    : { customer_id: null, status: 'Draft', items: [] }
-)
-
-const addItem = () =>
-  form.value.items.push({ product_id: null, qty: 1, price: 0 })
-
-const remove = i => form.value.items.splice(i, 1)
-
-const setProduct = (item, product) => {
-  item.product_id = product.id
-  item.price = product.price
-}
-
-const setCustomer = customer => {
-  form.value.customer_id = customer.id
-}
-
-const total = computed(() =>
-  form.value.items.reduce((s, i) => s + i.qty * i.price, 0)
-)
-
-const save = () => {
-  emit('save', { ...form.value, total: total.value })
-}
-</script>

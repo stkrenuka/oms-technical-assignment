@@ -1,12 +1,12 @@
 // src/stores/auth.js
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref,computed  } from 'vue'
 import api from '@/api/axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const authenticated = ref(false)
-
+ const role = computed(() => user.value?.role ?? null)
   const setUser = (userData) => {
     user.value = userData
     authenticated.value = true
@@ -32,5 +32,5 @@ export const useAuthStore = defineStore('auth', () => {
     authenticated.value = false
   }
 
-  return { user, authenticated, setUser, getUser, logout }
+  return { user, authenticated,role, setUser, getUser, logout }
 })

@@ -1,6 +1,9 @@
 <!-- src/pages/customer/Dashboard.vue -->
 <script setup>
 import CustomerLayout from '@/layouts/CustomerLayout.vue'
+import { useOrderStore } from '@/stores/order'
+const orderStore = useOrderStore()
+
 </script>
 <template>
   <CustomerLayout>
@@ -16,22 +19,17 @@ import CustomerLayout from '@/layouts/CustomerLayout.vue'
       <!-- Orders -->
       <div class="bg-white p-6 rounded shadow">
         <p class="text-gray-500">Total Orders</p>
-        <p class="text-3xl font-bold mt-2">124</p>
-        <p class="text-sm text-green-600 mt-1">+12 today</p>
+        <p class="text-3xl font-bold mt-2">{{ orderStore }}</p>
       </div>
 
-      <!-- Customers -->
       <div class="bg-white p-6 rounded shadow">
-        <p class="text-gray-500">Total Customers</p>
+        <p class="text-gray-500">Lorem Text</p>
         <p class="text-3xl font-bold mt-2">58</p>
-        <p class="text-sm text-green-600 mt-1">+5 this week</p>
       </div>
 
-      <!-- Revenue -->
       <div class="bg-white p-6 rounded shadow">
-        <p class="text-gray-500">Total Revenue</p>
+        <p class="text-gray-500">Lorem Text</p>
         <p class="text-3xl font-bold mt-2">$18,450</p>
-        <p class="text-sm text-red-600 mt-1">-2% vs last week</p>
       </div>
 
     </div>

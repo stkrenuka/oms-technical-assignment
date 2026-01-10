@@ -20,14 +20,6 @@
           >
             Orders
           </router-link>
-
-          <router-link
-            :to="{ name: 'customer.products' }"
-            class="block px-4 py-2 rounded hover:bg-gray-800"
-          >
-            Products
-          </router-link>
-
            <LogOut />
         </nav>
       </aside>
