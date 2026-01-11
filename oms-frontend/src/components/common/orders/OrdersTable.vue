@@ -131,7 +131,7 @@ onMounted(() => {
           </td>
           <td class="p-2 border">
             <!-- Admin: clickable -->
-            <button v-if="isAdmin" class="px-2 py-1 text-sm rounded cursor-pointer" :class="statusClass(order.status)"
+            <button v-if="isAdmin" :disabled="order.status_id >5" class="px-2 py-1 text-sm rounded cursor-pointer" :class="statusClass(order.status)"
               @click="editOrder(order)">
               {{ order.status }}
             </button>
