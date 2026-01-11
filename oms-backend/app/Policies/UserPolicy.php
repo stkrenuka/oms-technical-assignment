@@ -19,4 +19,8 @@ class UserPolicy
         && $authUser->id !== $user->id
         && $user->role === 'customer';
 }
+ public function update(User $authUser, User $user): bool
+    {
+        return $authUser->role === 'admin';
+    }
 }

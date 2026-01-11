@@ -13,11 +13,18 @@ class UserService
         }
     }
 
+      public function addCustomer(array $data): User
+    {
+        return User::create([
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'role'     => $data['role'],
+            'password' => bcrypt('password123'), // or random password
+        ]);
+    }
     public function getCustomers(int $excludeUserId)
     {
-        return User::where('role', 'customer')
-            ->where('id', '!=', $excludeUserId)
-            ->select('id', 'name', 'email', 'role')
+        return User::select('id', 'name', 'email', 'role')
             ->paginate(10);
     }
 
@@ -36,5 +43,10 @@ class UserService
     public function delete(User $user): void
     {
         $user->delete();
+    }
+      public function update(User $user, array $data): User
+    {
+        $user->update($data);
+        return $user;
     }
 }

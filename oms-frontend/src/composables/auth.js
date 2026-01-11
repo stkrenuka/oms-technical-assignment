@@ -30,6 +30,14 @@ export default function useAuth() {
 
   // ✅ REGISTER FUNCTION
 const submitSignup = async () => {
+ if(!registerForm.name||!registerForm.email||!registerForm.password||!registerForm.password_confirmation)
+  {
+
+     errors.value = {
+      general: ['All the fields are required']
+    }
+    return
+  }
     const notification = useNotificationStore();
 
   if (processing.value) return
@@ -65,6 +73,13 @@ const submitSignup = async () => {
 
   // ✅ LOGIN FUNCTION (kept simple)
 const submitLogin = async () => {
+  if(!loginForm.email||!loginForm.password)
+  {
+     errors.value = {
+      general: ['All the fields are required']
+    }
+    return
+  }
   const notification = useNotificationStore();
   processing.value = true
   errors.value = {}

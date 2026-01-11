@@ -76,6 +76,9 @@
                 />
 
               </div>
+                <div v-if="errors.general" class="text-sm text-red-600 mt-1">
+                  <div> {{ errors.general[0] }}</div>
+                </div>
 
               <!-- Submit -->
               <button
