@@ -1,17 +1,13 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
-
 class Product extends Model
 {
     use SoftDeletes;
-     use HasFactory;
-
+    use HasFactory;
     protected $fillable = [
         'name',
         'description',
@@ -22,9 +18,9 @@ class Product extends Model
         'image',
     ];
     public function getImageUrlAttribute()
-{
-    return $this->image
-        ? Storage::url($this->image)
-        : null;
-}
+    {
+        return $this->image
+            ? Storage::url($this->image)
+            : null;
+    }
 }

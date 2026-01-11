@@ -5,8 +5,7 @@ import OrderModal from '@/components/common/orders/OrderModal.vue'
 import OrderNotes from '@/components/common/orders/OrderNotes.vue'
 import api from '@/api/axios'
 import { useNotificationStore } from '@/stores/notification'
-import { onMounted,computed,watch,ref  } from 'vue'
-
+import { onMounted, computed, watch, ref } from 'vue'
 const orderStore = useOrderStore()
 const notificationStore = useNotificationStore()
 const orderForm = useOrderForm()
@@ -14,7 +13,7 @@ const props = defineProps({
   userRole: String,
   authUser: Object
 })
-const isAdmin = computed(() =>  props.userRole === 'admin')
+const isAdmin = computed(() => props.userRole === 'admin')
 const authUser = props.authUser
 const search = ref('')
 let debounceTimer = null
@@ -27,12 +26,9 @@ const statusClass = (status) => ({
   Delivered: 'bg-green-100 text-green-700',
   Cancelled: 'bg-red-100 text-red-700',
 }[status] || 'bg-gray-100 text-gray-700')
-
 /* ---------------- Actions ---------------- */
-
 watch(search, () => {
   clearTimeout(debounceTimer)
-
   debounceTimer = setTimeout(() => {
     orderStore.getOrders(search.value)
   }, 400)
@@ -42,9 +38,7 @@ const editOrder = (order) => {
 }
 const saveOrder = async () => {
   orderStore.errors = {}
-
   const isEdit = orderForm.editing.value;
-
   const payload = {
     customer_id: orderStore.selectedCustomer
       ? orderStore.selectedCustomer
@@ -57,30 +51,24 @@ const saveOrder = async () => {
       price: item.price,
     })),
   }
-
   try {
     if (isEdit) {
-      // ✅ STATUS CHANGE (EDIT MODE)
       await api.post(
         `/orders/${orderStore.statusForm.order_id}/change-status`,
         {
           status_id: orderStore.statusForm.next_status_id,
-          note:"Order Status Changed"
+          note: "Order Status Changed"
         }
       )
     } else {
-      // ✅ CREATE
       await api.post('/orders', payload)
     }
-
     await orderStore.getAllOrders()
     orderForm.closeModal()
-
     notificationStore.notify(
       isEdit ? 'Order updated successfully' : 'Order saved successfully',
       'success'
     )
-
   } catch (error) {
     if (error.response?.status === 422) {
       orderStore.errors = error.response.data.errors
@@ -93,29 +81,23 @@ const saveOrder = async () => {
     }
   }
 }
-
-
 const cancelOrder = (id) => {
   orderStore.cancelOrder(id)
 }
 const deleteOrder = (id) => {
   orderStore.deleteOrder(id)
 }
-
 const onProductSelected = ({ product, item }) => {
   item.product_id = product.id
   item.name = product.name
   item.price = product.price
 }
-
 onMounted(() => {
   orderStore.getAllOrders()
 })
 </script>
-
 <template>
   <div class="bg-white rounded shadow p-6">
-
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-semibold">Orders</h2>
       <button class="px-4 py-2 bg-blue-600 text-white rounded" @click="orderForm.openCreateModal">
@@ -139,7 +121,6 @@ onMounted(() => {
           <th class="p-2 border">Action</th>
         </tr>
       </thead>
-
       <tbody>
         <tr v-for="order in orderStore.paginatedOrders" :key="order.id" class="text-center">
           <td class="p-2 border">#{{ order.id }}</td>
@@ -154,14 +135,11 @@ onMounted(() => {
               @click="editOrder(order)">
               {{ order.status }}
             </button>
-
             <!-- Customer: read-only -->
             <span v-else class="px-2 py-1 text-sm rounded" :class="statusClass(order.status)">
               {{ order.status }}
             </span>
           </td>
-
-
           <td class="p-2 border space-x-2">
             <!-- <button class="px-3 py-1 bg-blue-600 text-white rounded" @click="editOrder(order)">
               Edit
@@ -184,10 +162,8 @@ onMounted(() => {
             <button class="px-3 py-1 bg-green-600 text-white rounded" @click="orderForm.downloadInvoice(order.id)">
               Invoice
             </button>
-
           </td>
         </tr>
-
         <tr v-if="orderStore.paginatedOrders.length === 0">
           <td colspan="6" class="p-4 text-center text-gray-500">
             No orders found
@@ -195,23 +171,19 @@ onMounted(() => {
         </tr>
       </tbody>
     </table>
-
     <!-- Pagination -->
     <div class="flex justify-end mt-4 space-x-2">
       <button class="px-3 py-1 border rounded" :disabled="orderStore.page === 1" @click="orderStore.page--">
         Prev
       </button>
-
       <span class="px-3 py-1">
         {{ orderStore.page }}
       </span>
-
       <button class="px-3 py-1 border rounded" :disabled="orderStore.page * 5 >= orderStore.filteredOrders.length"
         @click="orderStore.page++">
         Next
       </button>
     </div>
-
     <OrderModal v-if="orderForm.showModal.value" :form="orderForm.form.value" :editing="orderForm.editing.value"
       :total="orderForm.calculatedTotal.value" :userRole="userRole" :authUser="authUser" @close="orderForm.closeModal"
       @save="saveOrder" @add-item="orderForm.addItem" @remove-item="orderForm.removeItem"

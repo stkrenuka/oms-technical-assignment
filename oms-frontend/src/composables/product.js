@@ -5,7 +5,6 @@ import { useNotificationStore } from '@/stores/notification'
 export default function useProducts() {
   const products = ref([])
   const loading = ref(false)
-
   const loadProducts = async () => {
     loading.value = true
     try {
@@ -15,17 +14,14 @@ export default function useProducts() {
       loading.value = false
     }
   }
-
   const saveProduct = async (form, isEdit) => {
     if (isEdit) {
       await api.put(`/admin/products/${form.id}`, form)
     } else {
       await api.post('/admin/products', form)
     }
-
     await loadProducts()
   }
-
   const deleteProduct = async (id) => {
     const notification = useNotificationStore();
     try {
@@ -36,16 +32,12 @@ export default function useProducts() {
     catch (e) {
       notification.notify('Something went wrong', 'error');
     }
-
   }
-
   const toggleStatus = async (product) => {
     const status = product.status === 'active' ? 'inactive' : 'active'
     await api.patch(`/admin/products/${product.id}/status`, { status })
     product.status = status
   }
-
-
   return {
     products,
     loading,

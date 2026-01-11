@@ -26,7 +26,6 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // 🔑 Create token
         $token = $user->createToken('spa-token')->plainTextToken;
 
         return response()->json([

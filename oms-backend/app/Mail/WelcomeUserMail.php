@@ -14,7 +14,6 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
 
     public User $user;
 
-    // ✅ MUST initialize typed property
     public function __construct(User $user)
     {
         $this->user = $user;

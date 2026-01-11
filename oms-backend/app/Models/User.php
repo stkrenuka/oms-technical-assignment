@@ -1,18 +1,14 @@
 <?php
-
 namespace App\Models;
-
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens,SoftDeletes;
-
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
     /**
      * The attributes that are mass assignable.
      *
@@ -24,7 +20,6 @@ class User extends Authenticatable
         'password',
         'role',
     ];
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -34,7 +29,6 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-
     /**
      * Get the attributes that should be cast.
      *
@@ -47,11 +41,11 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-     public function isAdmin(): bool
+    public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
-     public function isCustomer(): bool
+    public function isCustomer(): bool
     {
         return $this->role === 'customer';
     }

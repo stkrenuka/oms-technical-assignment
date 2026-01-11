@@ -31,50 +31,33 @@ export default function useCommonWork() {
     }
     const updateCustomer = async (id, payload) => {
         const notification = useNotificationStore()
-
         try {
             const { data } = await api.put(`admin/customers/${id}`, payload)
-
             notification.notify('Customer updated successfully', 'success')
-
             await loadCustomers()
-
             return data
         } catch (error) {
-            // 🔐 Unauthorized / Forbidden
             if (error.response?.status === 403) {
                 notification.notify('You are not authorized to update this customer', 'error')
             }
-
-            // ❌ Validation error (Laravel 422)
             if (error.response?.status === 422) {
                 return Promise.reject(error.response.data.errors)
             }
-
-            // 💥 Server / Unknown error
             notification.notify('Something went wrong. Please try again.', 'error')
-
             throw error
         }
-
-
     }
    const createCustomer = async (payload) => {
             const notification = useNotificationStore()
-
             try {
                 const { data } = await api.post('admin/customers', payload)
-
                 notification.notify('Customer added successfully', 'success')
-
                 await loadCustomers()
-
                 return data
             } catch (error) {
                 if (error.response?.status === 422) {
                     return Promise.reject(error.response.data.errors)
                 }
-
                 notification.notify('Failed to add customer', 'error')
                 throw error
             }

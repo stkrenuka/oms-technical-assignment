@@ -1,15 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-    path: '/:pathMatch(.*)*', // Matches all unmatched paths
-    name: 'notfound',
-    component: () => import('@/pages/NotFound.vue'),
-  },
-    // 🔓 AUTH ROUTES
+      path: '/:pathMatch(.*)*', // Matches all unmatched paths
+      name: 'notfound',
+      component: () => import('@/pages/NotFound.vue'),
+    },
     {
       path: '/',
       redirect: '/login',
@@ -32,8 +30,6 @@ const router = createRouter({
     //   component: () => import('@/pages/auth/Logout.vue'),
     //   meta: { requiresAuth: true },
     // },
-
-    // 🔐 ADMIN ROUTES
     {
       path: '/admin',
       meta: { requiresAuth: true, roles: ['admin'] },
@@ -60,8 +56,6 @@ const router = createRouter({
         },
       ],
     },
-
-    // 🔐 CUSTOMER ROUTES
     {
       path: '/customer',
       meta: { requiresAuth: true, roles: ['customer'] },
@@ -85,24 +79,17 @@ const router = createRouter({
     },
   ],
 })
-
 router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore()
-
   if (!auth.authenticated && localStorage.getItem('token')) {
     await auth.getUser()
   }
-
   if (to.meta.requiresAuth && !auth.authenticated) {
     return next({ name: 'login' })
   }
-
   if (to.meta.roles && !to.meta.roles.includes(auth.user?.role)) {
     return next({ name: 'login' })
   }
-
   next()
 })
-
-
 export default router

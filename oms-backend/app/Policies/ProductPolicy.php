@@ -1,11 +1,8 @@
 <?php
-
 namespace App\Policies;
-
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
-
 class ProductPolicy
 {
     /**
@@ -15,7 +12,6 @@ class ProductPolicy
     {
         return $user->role === 'admin';
     }
-
     /**
      * Determine whether the user can view the model.
      */
@@ -23,7 +19,6 @@ class ProductPolicy
     {
         return false;
     }
-
     /**
      * Determine whether the user can create models.
      */
@@ -31,7 +26,6 @@ class ProductPolicy
     {
         return false;
     }
-
     /**
      * Determine whether the user can update the model.
      */
@@ -39,7 +33,6 @@ class ProductPolicy
     {
         return false;
     }
-
     /**
      * Determine whether the user can delete the model.
      */
@@ -47,7 +40,6 @@ class ProductPolicy
     {
         return false;
     }
-
     /**
      * Determine whether the user can restore the model.
      */
@@ -55,7 +47,6 @@ class ProductPolicy
     {
         return false;
     }
-
     /**
      * Determine whether the user can permanently delete the model.
      */

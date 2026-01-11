@@ -5,6 +5,5 @@
 </template>
 <script setup>
 import useAuth from '@/composables/auth'
-
 const { logout } = useAuth();
 </script>
