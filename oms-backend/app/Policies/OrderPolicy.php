@@ -58,5 +58,15 @@ class OrderPolicy
     return $user->role === 'customer'
         && $order->customer_id === $user->id;
 }
+  public function upload(User $user, Order $order): bool
+    {
+        // Admin can upload for any order
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        // Customer can upload only for their own order
+        return $order->customer_id === $user->id;
+    }
 
 }

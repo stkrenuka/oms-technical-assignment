@@ -177,7 +177,7 @@ onMounted(() => {
               Delete
             </button>
             <!-- Notes -->
-            <button class="px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-800"
+            <button class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-800"
               @click="orderForm.openNotes(order.id, order.status_id)">
               Notes
             </button>

@@ -6,9 +6,10 @@ import { useNotificationStore } from '@/stores/notification'
 const ordersStore = useOrderStore()
 export default function useOrderForm() {
   const showModal = ref(false);
+const baseApi=import.meta.env.VITE_API_BASE_URL;
 
   const editing = ref(false)
-
+  const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB
   const form = ref({
     id: null,
     customer_id: null,
@@ -86,8 +87,9 @@ export default function useOrderForm() {
     form.value.items.splice(index, 1)
   }
   const openNotes = async (orderId, status_id) => {
+
     try {
-      ordersStore.errors={}
+      ordersStore.errors = {}
       // Set state first
       ordersStore.formNotes.order_id = orderId
       ordersStore.formNotes.status_id = status_id
@@ -97,7 +99,9 @@ export default function useOrderForm() {
       const { data } = await api.get(
         `/orders/${orderId}/status-history`
       )
-
+      await ordersStore.fetchOrderFiles(
+        ordersStore.formNotes.order_id
+      )
 
       ordersStore.statusHistory = data
 
@@ -118,9 +122,9 @@ export default function useOrderForm() {
   }
   const saveNotes = async () => {
     if (ordersStore.formNotes.notes == '') {
-     ordersStore.errors = {
-  notes: 'Please add something'
-}
+      ordersStore.errors = {
+        notes: 'Please add something'
+      }
       return
     }
     const notification = useNotificationStore();
@@ -152,8 +156,6 @@ export default function useOrderForm() {
       console.error('Failed to save order note:', error)
       notification.notify('Something went wrong', 'error');
 
-      // Optional: show toast / alert
-      // toast.error(error.response?.data?.message || 'Something went wrong')
 
     } finally {
       // Optional: stop loader
@@ -189,6 +191,97 @@ export default function useOrderForm() {
     }
   }
 
+  async function uploadMultipleFiles(event) {
+    const files = Array.from(event.target.files);
+    if (!files.length) return
+    ordersStore.uploading = true
+    ordersStore.uploadProgress = 0
+    for (const file of files) {
+      await uploadSingleFile(file)
+    }
+    ordersStore.uploading = false
+    await ordersStore.fetchOrderFiles(
+      ordersStore.formNotes.order_id
+    )
+  }
+
+  async function uploadSingleFile(file) {
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
+    let uploadedChunks = 0
+
+    // 1️⃣ INIT
+    const payload = {
+      order_id: ordersStore.formNotes.order_id,
+      file_name: file.name,
+      total_chunks: totalChunks,
+    }
+
+    const initRes = await api.post('/uploads/init', payload)
+    const uploadId = initRes.data.upload_id
+
+    // 2️⃣ CHUNK UPLOAD
+    let start = 0
+    let index = 0
+
+    while (start < file.size) {
+      const chunk = file.slice(start, start + CHUNK_SIZE)
+
+      const form = new FormData()
+      form.append('upload_id', String(uploadId))
+      form.append('chunk_index', index)
+      form.append('chunk', chunk)
+
+      await api.post('/uploads/chunk', form)
+
+      uploadedChunks++
+
+      // ✅ UPDATE PROGRESS HERE
+      ordersStore.uploadProgress = Math.round(
+        (uploadedChunks / totalChunks) * 100
+      )
+
+      index++
+      start += CHUNK_SIZE
+    }
+
+    // 3️⃣ COMPLETE
+    await api.post(`/uploads/${uploadId}/complete`)
+    ordersStore.uploading = false
+
+
+
+  }
+const downloadFile = async (file) => {
+  const response = await api.get(
+    `${baseApi}/orders/files/${file.id}/download`,
+    { responseType: 'blob' }
+  )
+
+  // Get filename from headers
+  const disposition = response.headers['content-disposition']
+  let filename = file.file_name
+
+  if (disposition && disposition.includes('filename=')) {
+    filename = disposition.split('filename=')[1].replace(/"/g, '')
+  }
+
+  // Create blob with correct mime type
+  const blob = new Blob([response.data], {
+    type: response.headers['content-type'],
+  })
+
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', filename)
+
+  document.body.appendChild(link)
+  link.click()
+
+  // Cleanup
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
 
 
 
@@ -209,6 +302,8 @@ export default function useOrderForm() {
     closeNotes,
     saveNotes,
     downloadInvoice,
+    uploadMultipleFiles,
+    downloadFile
 
   }
 }

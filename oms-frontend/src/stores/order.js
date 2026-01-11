@@ -8,12 +8,16 @@ export const useOrderStore = defineStore('order', () => {
      STATE
   -------------------- */
   const notification = useNotificationStore();
+  const uploadId = ref(null);
+  const uploadedFiles = ref([])
   const orders = ref([])
   const errors = ref({})
   const ordersStatus = ref([])
   const selectedCustomer = ref(null)
   const statusHistory = ref([])
 
+  const uploading = ref(false)
+  const uploadProgress = ref(0)
   const showNotesModal = ref(false)
   const formNotes = ref({
     order_id: null,
@@ -22,8 +26,8 @@ export const useOrderStore = defineStore('order', () => {
   })
   const statusForm = ref({
     order_id: null,
-    current_status_id : null,
-    next_status_id:null,
+    current_status_id: null,
+    next_status_id: null,
     note: '',
   })
   const search = ref('')
@@ -40,16 +44,16 @@ export const useOrderStore = defineStore('order', () => {
   /* --------------------
      COMPUTED
   -------------------- */
- const filteredOrders = computed(() => {
-  const term = search.value.toLowerCase()
+  const filteredOrders = computed(() => {
+    const term = search.value.toLowerCase()
 
-  return orders.value.filter(o => {
-    const customer = (o.customer?.name || '').toLowerCase()
-    const id = o.id?.toString() || ''
+    return orders.value.filter(o => {
+      const customer = (o.customer?.name || '').toLowerCase()
+      const id = o.id?.toString() || ''
 
-    return customer.includes(term) || id.includes(term)
+      return customer.includes(term) || id.includes(term)
+    })
   })
-})
 
 
   const paginatedOrders = computed(() => {
@@ -60,33 +64,33 @@ export const useOrderStore = defineStore('order', () => {
   /* --------------------
      ACTIONS
   -------------------- */
- const getOrders = async (search = '') => {
-  const { data } = await api.get('/orders', {
-    params: { search }
-  })
+  const getOrders = async (search = '') => {
+    const { data } = await api.get('/orders', {
+      params: { search }
+    })
 
-  orders.value = data.data.map(order => ({
-    id: order.id,
-    customer: order.customer?.name || '',
-    customer_id: order.customer_id,
+    orders.value = data.data.map(order => ({
+      id: order.id,
+      customer: order.customer?.name || '',
+      customer_id: order.customer_id,
 
-    status: order.status?.name || '',
-    status_id: order.status_id,
+      status: order.status?.name || '',
+      status_id: order.status_id,
 
-    total: Number(order.total),
-    created_at: order.created_at,
+      total: Number(order.total),
+      created_at: order.created_at,
 
-    items: order.items.map(item => ({
-      product_id: item.product_id,
-      name: item.product?.name || '',
-      qty: item.quantity,
-      price: Number(item.price),
-    })),
+      items: order.items.map(item => ({
+        product_id: item.product_id,
+        name: item.product?.name || '',
+        qty: item.quantity,
+        price: Number(item.price),
+      })),
 
-    // optional: keep notes for search
-    status_histories: order.status_histories || [],
-  }))
-}
+      // optional: keep notes for search
+      status_histories: order.status_histories || [],
+    }))
+  }
 
 
   const setOrderStatuses = (statuses) => {
@@ -199,6 +203,10 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
+  async function fetchOrderFiles(orderId) {
+  const res = await api.get(`/orders/${orderId}/files`)
+  uploadedFiles.value = res.data
+}
   return {
     // state
     orders,
@@ -210,6 +218,8 @@ export const useOrderStore = defineStore('order', () => {
     showNotesModal,
     formNotes,
     statusHistory,
+    uploading,
+    uploadProgress,
 
     // computed
     filteredOrders,
@@ -217,6 +227,8 @@ export const useOrderStore = defineStore('order', () => {
     stats,
     selectedOrder,
     statusForm,
+    uploadId,
+    uploadedFiles,
     // actions
     addOrder,
     getOrders,
@@ -225,6 +237,7 @@ export const useOrderStore = defineStore('order', () => {
     getAllOrders,
     setOrderStatuses,
     getStats,
-    deleteOrder
+    deleteOrder,
+    fetchOrderFiles
   }
 })

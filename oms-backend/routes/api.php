@@ -7,9 +7,13 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\ProductController as CustomerProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UploadController;
+use App\Http\Controllers\OrderFileController;
+
 // Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 Route::post('/login', [AuthenticatedSessionController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per minute;
-Route::post('/register', [AuthenticatedSessionController::class, 'register']) ->middleware('throttle:3,1');;
+Route::post('/register', [AuthenticatedSessionController::class, 'register'])->middleware('throttle:3,1');
+;
 Route::post('/logout', [AuthenticatedSessionController::class, 'logout'])
     ->middleware('auth:sanctum');
 Route::delete('/admin/customers/{user}', [UserController::class, 'destroy'])
@@ -44,4 +48,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('orders/{order}/invoice', [OrderController::class, 'downloadInvoice']);
     Route::post('update/order', [OrderController::class, 'updateOrder']);
     Route::get('dashboard/stats', [DashboardController::class, 'stats']);
+    Route::post('/uploads/init', [UploadController::class, 'init']);
+    Route::post('/uploads/chunk', [UploadController::class, 'uploadChunk']);
+    Route::get('/uploads/{uploadId}/status', [UploadController::class, 'status']);
+    Route::post('/uploads/{uploadId}/complete', [UploadController::class, 'complete']);
+    Route::get('/orders/{order}/files', action: [OrderFileController::class, 'index']);
+    Route::get('/orders/files/{file}/download',[OrderFileController::class, 'download']
+    );
 });
