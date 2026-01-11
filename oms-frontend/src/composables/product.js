@@ -1,7 +1,7 @@
 // oms-frontend/src/composables/product.js
 import { ref } from 'vue'
 import api from '@/api/axios'
-
+import { useNotificationStore } from '@/stores/notification'
 export default function useProducts() {
   const products = ref([])
   const loading = ref(false)
@@ -27,8 +27,16 @@ export default function useProducts() {
   }
 
   const deleteProduct = async (id) => {
-    await api.delete(`/admin/products/${id}`)
-    products.value = products.value.filter(p => p.id !== id)
+    const notification = useNotificationStore();
+    try {
+      await api.delete(`/admin/products/${id}`)
+      products.value = products.value.filter(p => p.id !== id);
+      notification.notify('Product Deleted successfully', 'success');
+    }
+    catch (e) {
+      notification.notify('Something went wrong', 'error');
+    }
+
   }
 
   const toggleStatus = async (product) => {

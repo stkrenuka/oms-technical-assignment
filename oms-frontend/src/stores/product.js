@@ -132,7 +132,7 @@ export const useProductStore = defineStore('product', () => {
       } else {
         notification.notify(
           error?.response?.data?.message ||
-            'Something went wrong while saving the product',
+          'Something went wrong while saving the product',
           'error'
         )
       }
@@ -140,10 +140,21 @@ export const useProductStore = defineStore('product', () => {
   }
 
   const deleteProduct = async (id) => {
-    if (!confirm('Delete this product?')) return
+    const notification = useNotificationStore();
+    try {
+      if (!confirm('Delete this product?')) return
 
-    await api.delete(`/admin/products/${id}`)
-    await loadProducts(pagination.value.current_page)
+      await api.delete(`/admin/products/${id}`)
+
+      await loadProducts(pagination.value.current_page)
+      notification.notify('Product Deleted successfully', 'success');
+
+    } catch (error) {
+      notification.notify('Something went wrong', 'error');
+
+    }
+
+
   }
 
   const toggleStatus = async (product) => {
@@ -158,17 +169,17 @@ export const useProductStore = defineStore('product', () => {
     form.value.image = e.target.files[0]
   }
   const searchForOrder = async (query) => {
-  if (!query || query.length < 2) return []
+    if (!query || query.length < 2) return []
 
-  const { data } = await api.get('/products', {
-    params: {
-      search: query,
-      per_page: 10, // IMPORTANT
-    },
-  })
+    const { data } = await api.get('/products', {
+      params: {
+        search: query,
+        per_page: 10, // IMPORTANT
+      },
+    })
 
-  return data.data
-}
+    return data.data
+  }
 
   return {
     // state

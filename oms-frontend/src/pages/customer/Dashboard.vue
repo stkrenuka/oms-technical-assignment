@@ -3,7 +3,7 @@
 import CustomerLayout from '@/layouts/CustomerLayout.vue'
 import { useOrderStore } from '@/stores/order'
 const orderStore = useOrderStore()
-
+orderStore.getStats()
 </script>
 <template>
   <CustomerLayout>
@@ -19,17 +19,17 @@ const orderStore = useOrderStore()
       <!-- Orders -->
       <div class="bg-white p-6 rounded shadow">
         <p class="text-gray-500">Total Orders</p>
-        <p class="text-3xl font-bold mt-2">{{ orderStore }}</p>
+        <p class="text-3xl font-bold mt-2">{{ orderStore.stats. total_orders}}</p>
       </div>
 
       <div class="bg-white p-6 rounded shadow">
         <p class="text-gray-500">Lorem Text</p>
-        <p class="text-3xl font-bold mt-2">58</p>
+        <p class="text-3xl font-bold mt-2">{{ orderStore.stats. total_orders}}</p>
       </div>
 
       <div class="bg-white p-6 rounded shadow">
         <p class="text-gray-500">Lorem Text</p>
-        <p class="text-3xl font-bold mt-2">$18,450</p>
+        <p class="text-3xl font-bold mt-2">{{ orderStore.stats. total_orders}}</p>
       </div>
 
     </div>

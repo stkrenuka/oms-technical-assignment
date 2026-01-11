@@ -2,19 +2,22 @@
 import { useOrderStore } from '@/stores/order'
 import useOrderForm from '@/composables/useOrderForm'
 import OrderModal from '@/components/common/orders/OrderModal.vue'
+import OrderNotes from '@/components/common/orders/OrderNotes.vue'
 import api from '@/api/axios'
-import {useNotificationStore} from '@/stores/notification'
-import { onMounted } from 'vue'
+import { useNotificationStore } from '@/stores/notification'
+import { onMounted,computed,watch,ref  } from 'vue'
+
 const orderStore = useOrderStore()
 const notificationStore = useNotificationStore()
 const orderForm = useOrderForm()
-const{ search } = orderStore
 const props = defineProps({
   userRole: String,
-  authUser:Object
+  authUser: Object
 })
-const userRole = props.userRole
+const isAdmin = computed(() =>  props.userRole === 'admin')
 const authUser = props.authUser
+const search = ref('')
+let debounceTimer = null
 /* ---------------- Helpers ---------------- */
 const statusClass = (status) => ({
   Draft: 'bg-yellow-100 text-yellow-700',
@@ -26,23 +29,26 @@ const statusClass = (status) => ({
 }[status] || 'bg-gray-100 text-gray-700')
 
 /* ---------------- Actions ---------------- */
+
+watch(search, () => {
+  clearTimeout(debounceTimer)
+
+  debounceTimer = setTimeout(() => {
+    orderStore.getOrders(search.value)
+  }, 400)
+})
 const editOrder = (order) => {
   orderForm.openEditModal(order)
 }
 const saveOrder = async () => {
-  // 1️⃣ Frontend validation
-  // if (!orderForm.form.value.items.length) {
-  //   orderStore.errors = {
-  //     items: ['Please add at least one product to the order.'],
-  //   }
-  //   return
-  // }
-
-  // 2️⃣ Reset previous errors
   orderStore.errors = {}
 
+  const isEdit = orderForm.editing.value;
+
   const payload = {
-    customer_id: orderStore.selectedCustomer? orderStore.selectedCustomer:authUser.id,
+    customer_id: orderStore.selectedCustomer
+      ? orderStore.selectedCustomer
+      : authUser.id,
     status: orderForm.form.value.status,
     total: orderForm.calculatedTotal.value,
     items: orderForm.form.value.items.map(item => ({
@@ -53,43 +59,45 @@ const saveOrder = async () => {
   }
 
   try {
-    // 3️⃣ API call
-    const { data } = await api.post('/orders', payload)
+    if (isEdit) {
+      // ✅ STATUS CHANGE (EDIT MODE)
+      await api.post(
+        `/orders/${orderStore.statusForm.order_id}/change-status`,
+        {
+          status_id: orderStore.statusForm.next_status_id,
+          note:"Order Status Changed"
+        }
+      )
+    } else {
+      // ✅ CREATE
+      await api.post('/orders', payload)
+    }
 
-    // 4️⃣ Update UI
-  orderStore.addOrder({
-  ...data.data,
-  customer: data.data.customer?.name ?? '—',
-  items: data.data.items ?? orderForm.form.value.items, // ✅ ADD THIS
-  total: data.data.total,
-})
-
-    // 5️⃣ Close modal
-      orderStore.getAllOrders()
-
+    await orderStore.getAllOrders()
     orderForm.closeModal()
 
-    // 6️⃣ Success notification
     notificationStore.notify(
-      'Order saved successfully',
+      isEdit ? 'Order updated successfully' : 'Order saved successfully',
       'success'
     )
 
   } catch (error) {
-    console.error('Error saving order:', error);
-    // ❌ ONLY runs on error
     if (error.response?.status === 422) {
       orderStore.errors = error.response.data.errors
     } else {
       notificationStore.notify(
         error?.response?.data?.message ||
-          'Something went wrong while saving the order',
+        'Something went wrong',
         'error'
       )
     }
   }
 }
 
+
+const cancelOrder = (id) => {
+  orderStore.cancelOrder(id)
+}
 const deleteOrder = (id) => {
   orderStore.deleteOrder(id)
 }
@@ -106,11 +114,11 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="bg-white rounded shadow p-6">
+  <div class="bg-white rounded shadow p-6">
 
-      <div class="flex justify-between items-center mb-4">
+    <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-semibold">Orders</h2>
-      <button class="px-4 py-2 bg-blue-600 text-white rounded"  @click="orderForm.openCreateModal">
+      <button class="px-4 py-2 bg-blue-600 text-white rounded" @click="orderForm.openCreateModal">
         + Create Order
       </button>
     </div>
@@ -119,7 +127,7 @@ onMounted(() => {
       <input v-model="search" type="text" placeholder="Search order or customer..."
         class="border px-3 py-2 rounded w-64" />
     </div>
-      <!-- Orders Table (YOUR TABLE, UNCHANGED) -->
+    <!-- Orders Table (YOUR TABLE, UNCHANGED) -->
     <table class="w-full border">
       <thead class="bg-gray-100">
         <tr>
@@ -133,39 +141,50 @@ onMounted(() => {
       </thead>
 
       <tbody>
-        <tr
-          v-for="order in orderStore.paginatedOrders"
-          :key="order.id"
-          class="text-center"
-        >
+        <tr v-for="order in orderStore.paginatedOrders" :key="order.id" class="text-center">
           <td class="p-2 border">#{{ order.id }}</td>
           <td class="p-2 border">{{ order.customer }}</td>
           <td class="p-2 border">₹{{ order.total }}</td>
-<td class="p-2 border">
-  {{ order.items?.length || 0 }} Item(s)
-</td>
           <td class="p-2 border">
-            <span
-              class="px-2 py-1 text-sm rounded"
-              :class="statusClass(order.status)"
-            >
+            {{ order.items?.length || 0 }} Item(s)
+          </td>
+          <td class="p-2 border">
+            <!-- Admin: clickable -->
+            <button v-if="isAdmin" class="px-2 py-1 text-sm rounded cursor-pointer" :class="statusClass(order.status)"
+              @click="editOrder(order)">
+              {{ order.status }}
+            </button>
+
+            <!-- Customer: read-only -->
+            <span v-else class="px-2 py-1 text-sm rounded" :class="statusClass(order.status)">
               {{ order.status }}
             </span>
           </td>
 
+
           <td class="p-2 border space-x-2">
-            <button
-              class="px-3 py-1 bg-blue-600 text-white rounded"
-              @click="editOrder(order)"
-            >
+            <!-- <button class="px-3 py-1 bg-blue-600 text-white rounded" @click="editOrder(order)">
               Edit
+            </button> -->
+            <button class="px-3 py-1 rounded text-white" :class="order.status_id > 3
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-red-600 hover:bg-red-700'" :disabled="order.status_id > 3" @click="cancelOrder(order.id)">
+              Cancel
             </button>
-            <button
-              class="px-3 py-1 bg-red-600 text-white rounded"
-              @click="deleteOrder(order.id)"
-            >
+            <button v-if="isAdmin" class="px-3 py-1 rounded text-white" :class="order.status_id > 2
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-red-600 hover:bg-red-700'" :disabled="order.status_id > 2" @click="deleteOrder(order.id)">
               Delete
             </button>
+            <!-- Notes -->
+            <button class="px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-800"
+              @click="orderForm.openNotes(order.id, order.status_id)">
+              Notes
+            </button>
+            <button class="px-3 py-1 bg-green-600 text-white rounded" @click="orderForm.downloadInvoice(order.id)">
+              Invoice
+            </button>
+
           </td>
         </tr>
 
@@ -179,11 +198,7 @@ onMounted(() => {
 
     <!-- Pagination -->
     <div class="flex justify-end mt-4 space-x-2">
-      <button
-        class="px-3 py-1 border rounded"
-        :disabled="orderStore.page === 1"
-        @click="orderStore.page--"
-      >
+      <button class="px-3 py-1 border rounded" :disabled="orderStore.page === 1" @click="orderStore.page--">
         Prev
       </button>
 
@@ -191,27 +206,16 @@ onMounted(() => {
         {{ orderStore.page }}
       </span>
 
-      <button
-        class="px-3 py-1 border rounded"
-        :disabled="orderStore.page * 5 >= orderStore.filteredOrders.length"
-        @click="orderStore.page++"
-      >
+      <button class="px-3 py-1 border rounded" :disabled="orderStore.page * 5 >= orderStore.filteredOrders.length"
+        @click="orderStore.page++">
         Next
       </button>
     </div>
 
-  <OrderModal
-    v-if="orderForm.showModal.value"
-    :form="orderForm.form.value"
-    :editing="orderForm.editing.value"
-    :total="orderForm.calculatedTotal.value"
-    :userRole="userRole"
-    :authUser="authUser"
-    @close="orderForm.closeModal"
-    @save="saveOrder"
-    @add-item="orderForm.addItem"
-    @remove-item="orderForm.removeItem"
-    @product-selected="onProductSelected"
-  />
+    <OrderModal v-if="orderForm.showModal.value" :form="orderForm.form.value" :editing="orderForm.editing.value"
+      :total="orderForm.calculatedTotal.value" :userRole="userRole" :authUser="authUser" @close="orderForm.closeModal"
+      @save="saveOrder" @add-item="orderForm.addItem" @remove-item="orderForm.removeItem"
+      @product-selected="onProductSelected" />
+    <OrderNotes />
   </div>
 </template>

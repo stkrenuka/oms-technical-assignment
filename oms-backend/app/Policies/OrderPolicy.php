@@ -13,6 +13,7 @@ class OrderPolicy
             || $order->customer_id === $user->id;
     }
 
+
     public function create(User $user): bool
     {
         return in_array($user->role, ['admin', 'customer']);
@@ -34,4 +35,28 @@ class OrderPolicy
     {
         return $user->role === 'admin';
     }
+      public function cancel(User $user, Order $order): bool
+    {
+        // Admin override
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        // Customer can cancel only their own order
+        return $user->role === 'customer'
+            && $order->customer_id === $user->id;
+    }
+
+    public function downloadInvoice(User $user, Order $order): bool
+{
+    // Admin can download any invoice
+    if ($user->role === 'admin') {
+        return true;
+    }
+
+    // Customer can download ONLY their own order invoice
+    return $user->role === 'customer'
+        && $order->customer_id === $user->id;
+}
+
 }

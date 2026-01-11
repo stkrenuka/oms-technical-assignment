@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -11,16 +12,24 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        $query = Order::query();
+        // Base order query
+        $orderQuery = Order::query();
 
         // 🔐 Customer → only own orders
         if ($user->role === 'customer') {
-            $query->where('customer_id', $user->id);
+            $orderQuery->where('customer_id', $user->id);
+        }
+
+        // 👑 Admin → total customers count
+        $totalCustomers = null;
+        if ($user->role === 'admin') {
+            $totalCustomers = User::where('role', 'customer')->count();
         }
 
         return response()->json([
-            'total_orders' => $query->count(),
-            'total_revenue' => $query->sum('total'),
+            'total_orders'   => $orderQuery->count(),
+            'total_revenue'  => $orderQuery->sum('total'),
+            'total_customers'=> $totalCustomers, // null for customer
         ]);
     }
 }

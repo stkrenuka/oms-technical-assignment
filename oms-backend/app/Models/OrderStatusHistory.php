@@ -10,6 +10,7 @@ class OrderStatusHistory extends Model
         'order_id',
         'status_id',
         'changed_by',
+        'note'
     ];
 
     public function order()
@@ -22,7 +23,7 @@ class OrderStatusHistory extends Model
         return $this->belongsTo(OrderStatus::class);
     }
 
-    public function user()
+    public function author()
     {
         return $this->belongsTo(User::class, 'changed_by');
     }

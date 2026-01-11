@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Services\Order\OrderService;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Log;
 
 class OrderController extends Controller
 {
     public function __construct(
         protected OrderService $orderService
-    ) {}
+    ) {
+    }
 
     public function index(Request $request)
     {
@@ -42,12 +45,83 @@ class OrderController extends Controller
         $order = $this->orderService->create($data, $request->user());
 
         return response()->json([
-    'data' => $order->load('customer'),
-]);
+            'data' => $order->load('customer'),
+        ]);
     }
     public function statuses()
     {
         $statuses = $this->orderService->getStatuses();
         return response()->json($statuses);
     }
+    public function changeStatus(
+        Request $request,
+        Order $order,
+        OrderService $orderService
+    ) {
+        $validated = $request->validate([
+            'status_id' => 'required|exists:order_statuses,id',
+            'note' => 'nullable|string|max:1000',
+        ]);
+
+        $orderService->changeStatus(
+            $order,
+            $validated['status_id'],
+            $validated['note'] ?? null // ✅ PASS NOTE
+        );
+
+        return response()->json([
+            'message' => 'Order status updated successfully',
+        ]);
+    }
+    public function statusHistory(Order $order)
+    {
+        $history = $order->statusHistories()
+            ->with([
+                'status:id,name',
+                'author:id,name'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($history);
+    }
+    public function cancel(Order $order, OrderService $orderService)
+    {
+        $this->authorize('cancel', $order);
+        $orderService->cancelOrder($order);
+
+        return response()->json([
+            'message' => 'Order cancelled successfully',
+        ]);
+    }
+
+    public function destroy(Order $order, OrderService $orderService)
+    {
+        $this->authorize('delete', $order);
+
+        $orderService->softDeleteOrder($order);
+
+        return response()->json([
+            'message' => 'Order deleted successfully',
+        ]);
+    }
+
+
+public function downloadInvoice(Order $order)
+{
+    $this->authorize('downloadInvoice', $order);
+
+    $order->load('items.product', 'customer', 'status');
+
+    Log::info('Invoice items', $order->items->toArray());
+
+    $pdf = Pdf::loadView('invoices.order', [
+        'order' => $order,
+    ]);
+
+    return $pdf->download("invoice-{$order->id}.pdf");
+}
+
+
+
 }

@@ -50,9 +50,13 @@ class AuthController extends Controller
     /**
      * Login user
      */
-   public function login(Request $request)
+    public function login(Request $request)
     {
+
         $user = User::where('email', $request->email)->first();
+        if ($user->deleted_at) {
+            abort(403, 'Account is disabled.');
+        }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);

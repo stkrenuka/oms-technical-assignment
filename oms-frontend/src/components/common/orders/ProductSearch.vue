@@ -25,6 +25,9 @@ const selectProduct = (product) => {
   query.value = product.name
   results.value = []
 }
+const props = defineProps({
+  item: Array,
+})
 </script>
 
 <template>

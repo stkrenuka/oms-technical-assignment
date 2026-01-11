@@ -27,13 +27,13 @@ orderStore.getStats()
       <!-- Customers -->
       <div class="bg-white p-6 rounded shadow">
         <p class="text-gray-500">Total Customers</p>
-        <p class="text-3xl font-bold mt-2">58</p>
+        <p class="text-3xl font-bold mt-2">{{ orderStore.stats. total_customers}}</p>
       </div>
 
       <!-- Revenue -->
       <div class="bg-white p-6 rounded shadow">
         <p class="text-gray-500">Total Revenue</p>
-        <p class="text-3xl font-bold mt-2">$18,450</p>
+        <p class="text-3xl font-bold mt-2">${{ orderStore.stats. total_revenue}}</p>
       </div>
 
     </div>

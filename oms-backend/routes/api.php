@@ -35,8 +35,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])
     ->group(function () {
         Route::resource('products', AdminProductController::class);
         Route::patch('products/{product}/status', [AdminProductController::class, 'changeStatus']);
+
         Route::get('/customers', [UserController::class, 'customers']);
-               Route::get('/customers/search', [UserController::class, 'search']);
+        Route::get('/customers/search', [UserController::class, 'search']);
 
         Route::delete('/customers/{user}', [UserController::class, 'destroy']);
     });
@@ -44,14 +45,22 @@ Route::middleware(['auth:sanctum', 'role:admin'])
 // Customer – Products (public)
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/products', [CustomerProductController::class, 'index']);
+    Route::get('products', [CustomerProductController::class, 'index']);
 
     Route::get('orders', [OrderController::class, 'index']);
-
     Route::get('orders/statuses', [OrderController::class, 'statuses']);
 
-    Route::get('orders/{order}', [OrderController::class, 'show']);
+    Route::post('orders/{order}/change-status', [OrderController::class, 'changeStatus']);
+    Route::get('orders/{order}/status-history', [OrderController::class, 'statusHistory']);
 
+    Route::post('orders/{order}/cancel', [OrderController::class, 'cancel']); // ✅ THIS
+
+    Route::get('orders/{order}', [OrderController::class, 'show']);
     Route::post('orders', [OrderController::class, 'store']);
-    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::delete('orders/{order}', [OrderController::class, 'destroy']);
+    Route::get('orders/{order}/invoice', [OrderController::class, 'downloadInvoice']);
+
+    Route::post('update/order', [OrderController::class, 'updateOrder']);
+
+    Route::get('dashboard/stats', [DashboardController::class, 'stats']);
 });

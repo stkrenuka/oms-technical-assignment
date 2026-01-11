@@ -12,10 +12,10 @@ class ProductController extends Controller
     {
         $this->productService = $productService;
     }
-    public function index()
+    public function index(Request $request)
 {
     return response()->json(
-        $this->productService->getActiveProducts()
+        $this->productService->getActiveProducts($request)
     );
 }
 }

@@ -3,38 +3,56 @@
 namespace App\Services;
 
 use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
+
 class RegisterProductService
 {
- // Admin: all products
-public function getAdminProducts(Request $request, int $perPage = 10)
-{
-    $query = Product::query();
-
-    if ($request->filled('search')) {
-
-        // 1️⃣ Split input into words
-        $words = preg_split('/\s+/', trim($request->search));
-        // 2️⃣ Require ALL words to exist
-        foreach ($words as $word) {
-            $query->where(function ($q) use ($word) {
-                $q->where('name', 'LIKE', "%{$word}%")
-                  ->orWhere('description', 'LIKE', "%{$word}%");
-            });
-        }
-    }
-
-    return $query->latest()->paginate($perPage);
-}
-     // Customer: only active products
-    public function getActiveProducts(int $perPage = 10)
+    // Admin: all products
+    public function getAdminProducts(Request $request, int $perPage = 10)
     {
-        return Product::where('status', 'active')
-            ->paginate($perPage);
+        $query = Product::query();
+
+        if ($request->filled('search')) {
+
+            // 1️⃣ Split input into words
+            $words = preg_split('/\s+/', trim($request->search));
+            // 2️⃣ Require ALL words to exist
+            foreach ($words as $word) {
+                $query->where(function ($q) use ($word) {
+                    $q->where('name', 'LIKE', "%{$word}%")
+                        ->orWhere('description', 'LIKE', "%{$word}%");
+                });
+            }
+        }
+
+        return $query->latest()->paginate($perPage);
     }
+    // Customer: only active products
+    public function getActiveProducts(Request $request, int $perPage = 10)
+    {
+        $query = Product::where('status', 'active');
+
+        if ($request->filled('search')) {
+
+            // 1️⃣ Split search into words
+            $words = preg_split('/\s+/', trim($request->search));
+
+            // 2️⃣ Require ALL words to match (name OR description)
+            foreach ($words as $word) {
+                $query->where(function ($q) use ($word) {
+                    $q->where('name', 'LIKE', "%{$word}%")
+                        ->orWhere('description', 'LIKE', "%{$word}%");
+                });
+            }
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
+
     public function create(Request $request): Product
     {
         $data = $request->only([
@@ -71,5 +89,7 @@ public function getAdminProducts(Request $request, int $perPage = 10)
 
         return $product;
     }
+
+
 
 }
