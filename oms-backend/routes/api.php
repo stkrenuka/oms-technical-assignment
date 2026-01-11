@@ -8,8 +8,8 @@ use App\Http\Controllers\ProductController as CustomerProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DashboardController;
 // Route::post('/login', [AuthenticatedSessionController::class, 'login']);
-Route::post('/login', [AuthenticatedSessionController::class, 'login']);
-Route::post('/register', [AuthenticatedSessionController::class, 'register']);
+Route::post('/login', [AuthenticatedSessionController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per minute;
+Route::post('/register', [AuthenticatedSessionController::class, 'register']) ->middleware('throttle:3,1');;
 Route::post('/logout', [AuthenticatedSessionController::class, 'logout'])
     ->middleware('auth:sanctum');
 Route::delete('/admin/customers/{user}', [UserController::class, 'destroy'])

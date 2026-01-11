@@ -62,8 +62,18 @@ const submitSignup = async () => {
     )
 
   } catch (error) {
-    if (error.response?.status === 422) {
+    const status = error.response?.status
+
+    if (status === 429) {
+      errors.value = {
+        general: ['Too many signup attempts. Please try again later.']
+      }
+      return
+    }
+
+    if (status === 422) {
       errors.value = error.response.data.errors
+      return
     }
   } finally {
     processing.value = false
@@ -101,9 +111,23 @@ const submitLogin = async () => {
       'Login successful',
       'success'
     )
-  } catch (error) {
+  }  catch (error) {
+    const status = error.response?.status
+
+    if (status === 429) {
+      errors.value = {
+        general: ['Too many login attempts. Please try again later.']
+      }
+      return
+    }
+ if (status === 401) {
+      errors.value = {
+        general: ['Invalid email or password']
+      }
+      return
+    }
     errors.value = {
-      general: ['Invalid credentials']
+      general: ['Something went wrong. Please try again.']
     }
   } finally {
     processing.value = false
