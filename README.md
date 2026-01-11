@@ -95,3 +95,16 @@ php artisan migrate:fresh --seed
 php artisan queue:work
 php artisan storage:link
 php artisan db:seed --class=UserSeeder
+
+
+## 🔑 Example User Credentials
+
+Use the following credentials to access the system:
+
+### 👤 Admin
+- **Email:** `admin@example.com`
+- **Password:** `password`
+
+### 👤 Customer
+- **Email:** `customer@example.com`
+- **Password:** `password`
