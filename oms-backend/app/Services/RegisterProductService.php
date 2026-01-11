@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Log;
+
 class RegisterProductService
 {
     // Admin: all products
@@ -46,12 +48,14 @@ class RegisterProductService
             'stock',
             'status',
             'sku',
+            'image'
         ]);
+
         // Image upload
         if ($request->hasFile('image')) {
             $data['image'] = $request
                 ->file('image')
-                ->store('products', 'public');
+                ->store('products/images', 'public');
         }
         return Product::create($data);
     }

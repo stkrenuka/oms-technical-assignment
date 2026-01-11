@@ -27,7 +27,7 @@ class ProductController extends Controller
      */
     public function create(Request $request, array &$data)
     {
-        //
+
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
         }

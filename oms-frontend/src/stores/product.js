@@ -137,6 +137,8 @@ export const useProductStore = defineStore('product', () => {
     product.status = status
   }
   const onImageChange = (e) => {
+    errors.value = {}
+
     form.value.image = e.target.files[0]
   }
   const searchForOrder = async (query) => {

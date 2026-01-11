@@ -38,6 +38,7 @@ watch(
             <th class="p-2 border">Stock</th>
             <th class="p-2 border">Status</th>
             <th class="p-2 border">Image</th>
+            <th class="p-2 border">Description</th>
             <th class="p-2 border">Action</th>
           </tr>
         </thead>
@@ -55,8 +56,13 @@ watch(
                 {{ product.status }}
               </button>
             </td>
-            <td class="p-2 border"><img :src="`${API_URL}/storage/${product.image}`"
+            <td v-if="product.image" class="p-2 border"><img :src="`${API_URL}/storage/${product.image}`"
                 class="w-12 h-12 object-cover rounded" /></td>
+            <td v-else class="p-2 border"></td>
+            <td v-if="product.description" class="p-2 border truncate-text" :title="product.description">
+              {{ product.description }}
+            </td>
+            <td v-else class="p-2 border"></td>
             <!-- Actions -->
             <td class="p-2 border space-x-2">
               <button class="px-3 py-1 bg-blue-600 text-white rounded" @click="productStore.editProduct(product)">
@@ -106,15 +112,13 @@ watch(
           <textarea v-model="productStore.form.description" placeholder="Description"
             class="w-full mb-3 border p-2 rounded">
     </textarea>
-          <!-- ✅ Existing image preview (edit mode only) -->
-          <div v-if="productStore.isEdit && productStore.form.image_url" class="mb-3">
-            <p class="text-sm text-gray-600 mb-1">Current Image</p>
-            <img :src="productStore.form.image_url" class="w-20 h-20 object-cover rounded border" />
-          </div>
           <!-- ✅ Image upload -->
+          <p>Upload:jpg/jpeg/png</p>
           <div v-if="!productStore.isEdit">
-            <input type="file" accept="image/*" @change="onImageChange" class="w-full mb-4" />
-
+            <input type="file" accept="image/*" @change="productStore.onImageChange" class="w-full mb-4" />
+            <p v-if="productStore.errors.image" class="text-red-500 text-sm mt-1">
+              {{ productStore.errors.image[0] }}
+            </p>
           </div>
           <div class="flex justify-end space-x-2">
             <button class="px-4 py-2 bg-gray-400 rounded" @click="productStore.closeModal">
@@ -129,3 +133,11 @@ watch(
     </div>
   </DefaultLayout>
 </template>
+<style scoped>
+.truncate-text {
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>

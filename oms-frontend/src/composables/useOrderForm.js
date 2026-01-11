@@ -59,7 +59,6 @@ export default function useOrderForm() {
     ordersStore.statusForm.current_status_id = orderData.status_id
     ordersStore.statusForm.next_status_id = orderData.status_id
     ordersStore.statusForm.order_id = orderData.id
-    console.log('hhhjhj', ordersStore.statusForm)
     showModal.value = true
   }
   const closeModal = () => {
