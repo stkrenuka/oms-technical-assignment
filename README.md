@@ -48,6 +48,14 @@ Update .env:
 DB_DATABASE=oms
 DB_USERNAME=root
 DB_PASSWORD=
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=
+MAIL_FROM_ADDRESS=
+MAIL_FROM_NAME="Order Management System"
 
 
 Run migrations & seeders
